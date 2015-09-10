@@ -1,0 +1,108 @@
+# -*- coding: utf-8 -*-
+# File Name:  LoadData.py
+# Author: Changsheng Zhang
+# mail: zhangcsxx@gmail.com
+# Created Time: Tue Jul  7 10:09:08 2015
+
+#########################################################################
+
+from WindPy import *
+from datetime import *
+import os
+import sys
+
+def get_suspend_stock_name():
+	if w.isconnected() == False:
+		w.start()
+
+	susp_stock_name = []
+
+	res = w.wset("TradeSuspend",startdate=datetime.today(),enddate=datetime.today(),field="wind_code")
+	if res.ErrorCode != 0:
+		print('Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
+		sys.exit()
+		
+	for ii in range(len(res.Data[0])):
+		susp_stock_name.append(res.Data[0][ii])
+
+	return susp_stock_name
+
+#get all stock name which exclude suspended stock
+def get_all_stock_name():
+
+	if w.isconnected() == False:
+		w.start()
+
+	susp_stock_name = get_suspend_stock_name()
+	stock_name = []
+	# get all stock name
+	res = w.wset("SectorConstituent",u"date=;sector=全部A股")
+	if res.ErrorCode != 0:
+		print('Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
+		sys.exit()
+
+	for ii in range(len(res.Data[1])):
+		if res.Data[1][ii] in susp_stock_name:
+			continue
+		else:
+			stock_name.append(res.Data[1][ii])
+
+	return stock_name
+
+
+def get_daily_stock_data(stock_name_list):
+	if w.isconnected() == False:
+		w.start()
+	#3-dim: stock_name, time,indicator(time,open,high,low,close,volume,amt)
+	daily_stock_data= []
+
+	for stock_name in stock_name_list:
+		temp_data_per_stock = []
+		res = w.wsd(stock_name_list,"open,high,low,close,volume,amt", "20000101", "","PriceAdj=F",showblank=0)
+		if res.ErrorCode != 0:
+			print('Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
+			sys.exit()
+
+		for ii in range(len(res.Data[0])):
+			temp_data_per_day = []
+			if float(res.Data[0][ii])==0.0 or float(res.Data[1][ii])==0.0 or float(res.Data[2][ii])==0.0 or float(res.Data[3][ii])==0.0:
+				continue
+			temp_date = str(res.Times[ii])[0:10]
+			temp_data_per_day.append(temp_date)
+			for jj in range(len(res.Fields)):
+				temp_data_per_day.append(float(res.Data[jj][ii]))
+
+			temp_data_per_stock.append(temp_data_per_day)
+		daily_stock_data.append(temp_data_per_stock)
+
+	return daily_stock_data
+	
+#3-dim: stock_name, time,indicator(time,open,high,low,close,volume,amt)
+def get_intraday_stock_data(stock_name_list,bar_size = 60):
+	if w.isconnected() == False:
+		w.start()
+
+	for stock_name in stock_name_list:
+		temp_data_per_stock = []
+		res = w.wsi(stock_name,"open,high,low,close,volume,amt","2001-01-01",datetime.today(),BarSize=bar_size,showblank=0)
+		if res.ErrorCode != 0:
+			print('Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
+			sys.exit()
+
+		for ii in range(len(res.Data[0])):
+			temp_data_per_day = []
+			if float(res.Data[0][ii])==0.0 or float(res.Data[1][ii])==0.0 or float(res.Data[2][ii])==0.0 or float(res.Data[3][ii])==0.0:
+				continue
+			temp_date = str(res.Times[ii])[0:19]
+			temp_data_per_day.append(temp_date)
+			for jj in range(len(res.Fields)):
+				temp_data_per_day.append(float(res.Data[jj][ii]))
+
+			temp_data_per_stock.append(temp_data_per_day)
+		intraday_stock_data.append(temp_data_per_stock)
+
+	return intraday_stock_data
+
+
+
+
