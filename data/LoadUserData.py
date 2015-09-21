@@ -30,7 +30,7 @@ def load_user_data(file_path):
 	return user_stock_code_list,user_stock_name_list,user_stock_buy_point_list,user_stock_sell_point_list
 
 
-def load_user_stock_name_list(fiile_path):
+def load_user_stock_name_list(file_path):
 
 	wb = load_workbook(file_path)
 	sheet_names = wb.get_sheet_names()

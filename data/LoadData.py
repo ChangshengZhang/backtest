@@ -50,7 +50,7 @@ def get_all_stock_name():
 	return stock_name
 
 
-def get_daily_stock_data(stock_name_list):
+def get_daily_stock_data(stock_name_list,begin_date = "20000101"):
 	if w.isconnected() == False:
 		w.start()
 	#3-dim: stock_name, time,indicator(time,open,high,low,close,volume,amt)
@@ -59,7 +59,7 @@ def get_daily_stock_data(stock_name_list):
 	for stock_name in stock_name_list:
 		
 		temp_data_per_stock = []
-		res = w.wsd(stock_name,"open,high,low,close,volume,amt", "20000101", "","PriceAdj=F",showblank=0)
+		res = w.wsd(stock_name,"open,high,low,close,volume,amt", begin_date, "","PriceAdj=F",showblank=0)
 		if res.ErrorCode != 0:
 			print('Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
 			sys.exit()
