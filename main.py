@@ -14,4 +14,5 @@ if __name__ == '__main__':
 	
 	b = LoadData.get_daily_stock_data(["600000.SH"])
 	print b[0][0]
+	
 

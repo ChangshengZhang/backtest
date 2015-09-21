@@ -57,8 +57,9 @@ def get_daily_stock_data(stock_name_list):
 	daily_stock_data= []
 
 	for stock_name in stock_name_list:
+		
 		temp_data_per_stock = []
-		res = w.wsd(stock_name_list,"open,high,low,close,volume,amt", "20000101", "","PriceAdj=F",showblank=0)
+		res = w.wsd(stock_name,"open,high,low,close,volume,amt", "20000101", "","PriceAdj=F",showblank=0)
 		if res.ErrorCode != 0:
 			print('Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
 			sys.exit()
@@ -78,13 +79,14 @@ def get_daily_stock_data(stock_name_list):
 	return daily_stock_data
 	
 #3-dim: stock_name, time,indicator(time,open,high,low,close,volume,amt)
-def get_intraday_stock_data(stock_name_list,bar_size = 60):
+def get_intraday_stock_data(stock_name_list,bar_size = 60,delta_days = 365*3):
 	if w.isconnected() == False:
 		w.start()
 
+	intraday_stock_data = []
 	for stock_name in stock_name_list:
 		temp_data_per_stock = []
-		res = w.wsi(stock_name,"open,high,low,close,volume,amt","2001-01-01",datetime.today(),BarSize=bar_size,showblank=0)
+		res = w.wsi(stock_name,"open,high,low,close,volume,amt",datetime.today()-timedelta(days=delta_days),datetime.today(),BarSize=bar_size,showblank=0)
 		if res.ErrorCode != 0:
 			print('Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
 			sys.exit()
@@ -104,5 +106,20 @@ def get_intraday_stock_data(stock_name_list,bar_size = 60):
 	return intraday_stock_data
 
 
+def get_realtime_price(stock_name_list):
+	realtime_price_list = []
+	if w.isconnected() == False:
+		w.start()
 
+	for stock_name in stock_name_list:
+
+		res=w.wst(stock_name,"open", datetime.today()-timedelta(minutes=1), datetime.now())
+		if res.ErrorCode != 0:
+			print('Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
+			print "wst"
+			sys.exit()
+
+		realtime_price_list.append(float(res.Data[0][-1]))
+
+	return realtime_price_list
 

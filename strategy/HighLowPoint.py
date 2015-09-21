@@ -92,5 +92,6 @@ def get_high_low_points_list(stock_data_list):
 		high_points_index_list.append(high_points_index_list_per_stock)
 		high_points_list.append(high_points_list_per_stock)
 
+	#2-dim
 	return high_points_index_list,high_points_list,low_points_index_list,low_points_list
 
