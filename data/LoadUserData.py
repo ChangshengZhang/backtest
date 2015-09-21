@@ -30,3 +30,17 @@ def load_user_data(file_path):
 	return user_stock_code_list,user_stock_name_list,user_stock_buy_point_list,user_stock_sell_point_list
 
 
+def load_user_stock_name_list(fiile_path):
+
+	wb = load_workbook(file_path)
+	sheet_names = wb.get_sheet_names()
+	ws = wb.get_sheet_by_name(sheet_names[0])
+
+	user_stock_code_list = []
+	row_num = len(ws.rows)
+	for ii in range(1,row_num):
+		user_stock_code_list.append(ws.cell(row=ii+1,column=1).value)
+
+	return user_stock_code_list
+
+
