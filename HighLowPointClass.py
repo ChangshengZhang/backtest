@@ -12,6 +12,7 @@ import strategy.HighLowPoint as HighLowPoint
 import data.LoadUserData as LoadUserData
 import data.LoadData as LoadData
 import time
+import datetime
 import output.SendEmail as SendEmail
 
 class HighLowPointClass():
@@ -26,7 +27,10 @@ class HighLowPointClass():
 		self.realtime_price_list = LoadData.get_realtime_price(self.stock_code_list)
 		
 		self.reminder_info = []
-		self.stock_price_reminder()
+		self.run()
+
+	def stock_high_low_point_reminder(self):
+		date = 
 
 	def stock_price_reminder(self):
 		
@@ -41,6 +45,8 @@ class HighLowPointClass():
 				reminder_info = str(self.stock_code_list[ii])+" should be bought, whose target buy price is "+str(self.stock_buy_price_list[ii])+ ", now price is "+str(self.realtime_price_list[ii])
 				self.reminder_info.append(reminder_info)
 	
+	def 
+
 	def get_high_low_points(self):
 
 		bar_size = [5,30,60]
@@ -61,7 +67,10 @@ class HighLowPointClass():
 			ws.cell(row=ii+1,column = column_num +1).value = str(low_point)
 
 		wb.save(file_name)
-		
+
+	def run(self):
+		self.stock_price_reminder()
+
 
 
 if __name__ == '__main__':

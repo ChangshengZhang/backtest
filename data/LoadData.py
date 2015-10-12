@@ -19,7 +19,7 @@ def get_suspend_stock_name():
 
 	res = w.wset("TradeSuspend",startdate=datetime.today(),enddate=datetime.today(),field="wind_code")
 	if res.ErrorCode != 0:
-		print('Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
+		print('wset Error \nError['+str(res.ErrorCode)+'][load stockcode list fail]\n')
 		sys.exit()
 		
 	for ii in range(len(res.Data[0])):
@@ -38,7 +38,7 @@ def get_all_stock_name():
 	# get all stock name
 	res = w.wset("SectorConstituent",u"date=;sector=全部A股")
 	if res.ErrorCode != 0:
-		print('Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
+		print('wset Error \n Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
 		sys.exit()
 
 	for ii in range(len(res.Data[1])):
@@ -61,7 +61,7 @@ def get_daily_stock_data(stock_name_list,begin_date = "20000101"):
 		temp_data_per_stock = []
 		res = w.wsd(stock_name,"open,high,low,close,volume,amt", begin_date, "","PriceAdj=F",showblank=0)
 		if res.ErrorCode != 0:
-			print('Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
+			print('wsd Error \n Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
 			sys.exit()
 
 		for ii in range(len(res.Data[0])):
@@ -69,7 +69,11 @@ def get_daily_stock_data(stock_name_list,begin_date = "20000101"):
 			if float(res.Data[0][ii])==0.0 or float(res.Data[1][ii])==0.0 or float(res.Data[2][ii])==0.0 or float(res.Data[3][ii])==0.0:
 				continue
 			temp_date = str(res.Times[ii])[0:10]
-			temp_data_per_day.append(temp_date)
+			temp_date_1 = temp_date.split("-")
+			date_temp = ""
+			for item in temp_date_1:
+				date_temp = date_temp + item
+			temp_data_per_day.append(date_temp)
 			for jj in range(len(res.Fields)):
 				temp_data_per_day.append(float(res.Data[jj][ii]))
 
@@ -88,7 +92,7 @@ def get_intraday_stock_data(stock_name_list,bar_size = 60,delta_days = 365*3):
 		temp_data_per_stock = []
 		res = w.wsi(stock_name,"open,high,low,close,volume,amt",datetime.today()-timedelta(days=delta_days),datetime.today(),BarSize=bar_size,showblank=0)
 		if res.ErrorCode != 0:
-			print('Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
+			print('wsi Error \n Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
 			sys.exit()
 
 		for ii in range(len(res.Data[0])):
@@ -96,6 +100,10 @@ def get_intraday_stock_data(stock_name_list,bar_size = 60,delta_days = 365*3):
 			if float(res.Data[0][ii])==0.0 or float(res.Data[1][ii])==0.0 or float(res.Data[2][ii])==0.0 or float(res.Data[3][ii])==0.0:
 				continue
 			temp_date = str(res.Times[ii])[0:19]
+			temp_date_1 = temp_date.split("-")
+			temp_date = ""
+			for item in temp_date_1:
+				temp_date = temp_date + item 
 			temp_data_per_day.append(temp_date)
 			for jj in range(len(res.Fields)):
 				temp_data_per_day.append(float(res.Data[jj][ii]))
@@ -115,7 +123,7 @@ def get_realtime_price(stock_name_list):
 
 		res=w.wst(stock_name,"open", datetime.today()-timedelta(minutes=1), datetime.now())
 		if res.ErrorCode != 0:
-			print('Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
+			print('wst Error \n Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
 			print "wst"
 			sys.exit()
 

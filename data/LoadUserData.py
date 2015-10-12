@@ -43,4 +43,20 @@ def load_user_stock_name_list(file_path):
 
 	return user_stock_code_list
 
+def load_user_market_perf_hk_list(file_path):
+	wb = load_workbook(file_path)
+	sheet_names = wb.get_sheet_names()
+	ws = wb.get_sheet_by_name(sheet_names[0])
+	user_marktet_perf_hk_list =[]
+
+	row_num = len(ws.rows)
+	for ii in range(1,row_num):
+		temp = ws.cell(row=ii+1,column=1).value
+		a = temp.split(" ")
+		code_name = ""
+		for jj in range(5-len(a[0])):
+			code_name = code_name+"0"
+		code_name = code_name+a[0]+"."+"hk"
+		user_marktet_perf_hk_list.append(code_name)
+	return user_marktet_perf_hk_list
 

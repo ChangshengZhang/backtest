@@ -9,9 +9,11 @@
 def write_to_file(file_path,file_content):
 
 	f = open(file_path,"w")
+	f.write("date    	open 		   high    		 low  		    close 		     volume  	        amt")
+	f.write("\n")
 	line = ""
 	for content in file_content:
-		line = line + content +"  "
+		line = line + str(content) +"  "
 	line = line+"\n"
 	f.write(line)
 
@@ -19,11 +21,12 @@ def write_to_file(file_path,file_content):
 
 def write_list_to_file(file_path,file_content):
 	f = open(file_path,"w")
-
+	f.write("date    			open   		 high  		   low    		  close  		    volume       	  amt")
+	f.write("\n")
 	for ii in range(len(file_content)):
 		line = ""
 		for content in file_content[ii]:
-			line = line + content +"  "
+			line = line + str(content) +"  "
 		line = line +"\n"
 		f.write(line)
 	f.close()
