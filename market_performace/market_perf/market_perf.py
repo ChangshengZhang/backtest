@@ -158,6 +158,7 @@ class MarketCloseData():
 		for ii in range(60):
 			self.get_market_close_data()
 			self.write_to_excel()
+			print "the "+str(ii) + " th is done.\n"
 			time.sleep(600)
 		#self.fix_data_excel()
 

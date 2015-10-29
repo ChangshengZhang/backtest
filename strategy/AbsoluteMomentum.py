@@ -12,16 +12,17 @@ def AbsoluteMomentum(stock_data_list,compare_day=4,short_flag = True):
 	action_index_list = []
 	action_type_list = []
 
-	for ii in range(stock_data_list):
+	for ii in range(len(stock_data_list)):
 
 		action_index_list_per_stock = []
 		action_type_list_per_stock = []
 		
 		# 0, empty 1,long -1 short
 		pos_flag = 0
+		for jj in range(compare_day,len(stock_data_list[ii])):
 
-		for jj in range(compare_day,stock_data_list[ii]):
-			if stock_data_list[ii][jj] >= stock_data_list[ii][jj-compare_day]:
+			if float(stock_data_list[ii][jj]) >= float(stock_data_list[ii][jj-compare_day]):
+				
 				if pos_flag !=1:
 					action_index_list_per_stock.append(jj)
 					action_type_list_per_stock.append("l")

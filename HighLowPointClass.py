@@ -19,42 +19,93 @@ class HighLowPointClass():
 	"""docstring for HighLowPointClass"""
 	def __init__(self):
 		file_path = "input/user_data.xlsx"
-		self.stock_code_list,self.stock_name_list,self.stock_buy_price_list,self.stock_sell_price_list =LoadUserData.load_user_data(file_path)
-		self.stock_daily_data_list = LoadData.get_daily_stock_data(self.stock_code_list) 
+
+		stock_code_list,stock_name_list,stock_buy_price_list,stock_sell_price_list = LoadUserData.load_user_data(file_path)
+		stock_daily_data_list = LoadData.get_daily_stock_data(stock_code_list)
+
+		self.buy_signal_flag = 0
+		self.sell_signal_flag = 0
+
+		self.run(stock_code_list,stock_buy_price_list,stock_sell_price_list)
 
 
-		self.high_point_index_list,self.high_point_list,self.low_point_index_list,self.low_point_list = HighLowPoint.get_high_low_points_list(self.stock_daily_data_list)
-		self.realtime_price_list = LoadData.get_realtime_price(self.stock_code_list)
+
+	def run(stock_code_list,stock_buy_price_list,stock_sell_price_list):
+
+		for ii in range(60):
+			self.buy_signal_flag = 0
+			self.sell_signal_flag = 0
+
+			self.get_high_low_points(stock_code_list)
+			self.stock_price_reminder(stock_code_list,stock_buy_price_list,stock_sell_price_list)
+			print "the "+ str(ii) + " th is done."
+			time.sleep(600)
+
+
+
+	def stock_price_reminder(self,stock_code_list,stock_buy_price_list,stock_sell_price_list):
 		
-		self.reminder_info = []
-		self.run()
+		realtime_price_list = LoadData.get_realtime_price(stock_code_list)
+		reminder_info = []
 
-	def stock_high_low_point_reminder(self):
-		date = 
+		for ii in range(len(stock_code_list)):
 
-	def stock_price_reminder(self):
-		
-		for ii in range(len(self.stock_code_list)):
-
-			if float(self.realtime_price_list[ii]) >=float(self.stock_sell_price_list[ii]):
+			if float(realtime_price_list[ii]) >=float(stock_sell_price_list[ii]):
 				#sell
-				reminder_info = str(self.stock_code_list[ii])+" should be sold, whose target sell price is "+str(self.stock_sell_price_list[ii])+", now price is "+str(self.realtime_price_list[ii])
-				self.reminder_info.append(reminder_info)
-			elif float(self.realtime_price_list[ii])<=float(self.stock_buy_price_list[ii]):
+				temp_reminder_info = str(stock_code_list[ii])+" should be sold, whose target sell price is "+str(stock_sell_price_list[ii])+", now price is "+str(realtime_price_list[ii])
+				reminder_info.append(temp_reminder_info)
+			elif float(realtime_price_list[ii])<=float(stock_buy_price_list[ii]):
 				
-				reminder_info = str(self.stock_code_list[ii])+" should be bought, whose target buy price is "+str(self.stock_buy_price_list[ii])+ ", now price is "+str(self.realtime_price_list[ii])
-				self.reminder_info.append(reminder_info)
-	
-	def 
+				temp_reminder_info = str(stock_code_list[ii])+" should be bought, whose target buy price is "+str(stock_buy_price_list[ii])+ ", now price is "+str(realtime_price_list[ii])
+				reminder_info.append(temp_reminder_info)
 
-	def get_high_low_points(self):
+		if len(reminder_info)!= 0:
+			mail_content = ""
+			for jj in range(len(reminder_info)):
+				mail_content = mail_content + "\n" + reminder_info[jj]+"\n"
+			print mail_content 
+			b = SendEmail.Send_Email("Stock price reminder from H&L Model",mail_content)
 
+
+	def get_high_low_points(self,stock_code_list):
+		msg = ""
 		bar_size = [5,30,60]
 		column_num = [5,7,9]
 		for ii in range(len(bar_size)):
-			stock_intraday_data = LoadData.get_intraday_stock_data(self.stock_code_list,bar_size=bar_size[ii],delta_days = 365)
+			stock_intraday_data = LoadData.get_intraday_stock_data(stock_code_list,bar_size=bar_size[ii],delta_days = 365)
 			high_point_index_list,high_point_list,low_point_index_list,low_point_list = HighLowPoint.get_high_low_points_list(stock_intraday_data)
-			self.write_data_to_file(column_num[ii],high_point_list[-1],low_point_list[-1])
+			msg = msg + str(bar_size[ii]) + " min level:\n" 
+			for jj in range(len(stock_code_list)):
+
+				self.write_data_to_file(column_num[ii],high_point_list[jj][-1],low_point_list[jj][-1])
+
+				msg = msg + str(stock_code_list[jj])+ self.judge_trend_inverse(high_point_list[jj],low_point_list[jj])
+
+				msg = msg + "\n\n"
+		a = SendEmail.Send_Email("Trend inverse reminder from H&L Model",msg)
+
+
+	
+	def judge_trend_inverse(self,high_point_list,low_point_list):
+
+		msg = ""
+		if len(high_point_list)>=3 and self.buy_signal_flag == 0:
+			if high_point_list[-1]>= high_point_list[-2] and high_point_list[-2]<=high_point_list[-3]:
+				self.buy_signal_flag =1
+				msg = msg + "\nA new high point has break through the previous high point. Falling trend ends.\n"
+		else:
+			if high_point_list[-1]<= high_point_list[-2] or high_point_list[-2]>=high_point_list[-3]:
+				self.buy_signal_flag =0
+
+		if len(low_point_list>=3) and self.sell_signal_flag ==0:
+			if low_point_list[-1]<=low_point_list[-2] and low_point_list[-2] >= low_point_list[-3]:
+				self.sell_signal_flag = 1
+				msg = msg + "\nA new low point has break through the previous low point. Up trend ends.\n"
+		else:
+			if low_point_list[-1]>=low_point_list[-2] or low_point_list[-2] <= low_point_list[-3]:
+				self.sell_signal_flag = 0
+
+		return msg 
 
 	def write_data_to_file(self,column_num,high_point,low_point):
 		file_name = "input/user_data.xlsx"
@@ -68,23 +119,8 @@ class HighLowPointClass():
 
 		wb.save(file_name)
 
-	def run(self):
-		self.stock_price_reminder()
-
 
 
 if __name__ == '__main__':
 	
-	for ii in range(5):
-		a = HighLowPointClass()
-		
-		if len(a.reminder_info)!=0:
-			mail_content = ""
-			for jj in range(len(a.reminder_info)):
-				mail_content = mail_content + "\n" +a.reminder_info[jj]+"\n"
-			print mail_content
-			b = SendEmail.Send_Email("stock price remidner",mail_content)
-			print b.isSend
-
-		time.sleep(300)
-	
+	a = HighLowPointClass()
