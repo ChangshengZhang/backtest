@@ -14,6 +14,7 @@ import data.LoadData as LoadData
 import time
 import datetime
 import output.SendEmail as SendEmail
+from openpyxl import load_workbook
 
 class HighLowPointClass():
 	"""docstring for HighLowPointClass"""
@@ -29,18 +30,16 @@ class HighLowPointClass():
 		self.run(stock_code_list,stock_buy_price_list,stock_sell_price_list)
 
 
-
-	def run(stock_code_list,stock_buy_price_list,stock_sell_price_list):
+	def run(self,stock_code_list,stock_buy_price_list,stock_sell_price_list):
 
 		for ii in range(60):
 			self.buy_signal_flag = 0
-			self.sell_signal_flag = 0
+			self.sell_signal_flag = 0 
 
 			self.get_high_low_points(stock_code_list)
 			self.stock_price_reminder(stock_code_list,stock_buy_price_list,stock_sell_price_list)
 			print "the "+ str(ii) + " th is done."
 			time.sleep(600)
-
 
 
 	def stock_price_reminder(self,stock_code_list,stock_buy_price_list,stock_sell_price_list):
@@ -97,7 +96,7 @@ class HighLowPointClass():
 			if high_point_list[-1]<= high_point_list[-2] or high_point_list[-2]>=high_point_list[-3]:
 				self.buy_signal_flag =0
 
-		if len(low_point_list>=3) and self.sell_signal_flag ==0:
+		if len(low_point_list)>=3 and self.sell_signal_flag ==0:
 			if low_point_list[-1]<=low_point_list[-2] and low_point_list[-2] >= low_point_list[-3]:
 				self.sell_signal_flag = 1
 				msg = msg + "\nA new low point has break through the previous low point. Up trend ends.\n"
