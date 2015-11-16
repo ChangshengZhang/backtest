@@ -10,8 +10,8 @@ import scipy.stats as stats
 def calc_ma(per_stock_data_list,jj,range_day):
 	s = 0.0
 	for ii in range(range_day): 
-		s = per_stock_data_list[jj+ii-range_day+1]
-	s = s/10
+		s = s+per_stock_data_list[jj+ii-range_day+1]
+	s = s/range_day
 	return s
 
 
@@ -24,7 +24,7 @@ def PriceVolume(stock_data_list,range_day=10,regression_day = 5):
 		ma_per_stock_data_list = []
 		for jj in range(range_day-1,len(stock_data_list[ii])):
 			ma_per_stock_data_list.append(calc_ma(stock_data_list[ii],jj,range_day))
-
+		
 		slope_per_stock_list = []
 		for jj in range(regression_day-1,len(ma_per_stock_data_list)):
 			temp = []

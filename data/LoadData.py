@@ -130,4 +130,3 @@ def get_realtime_price(stock_name_list):
 		realtime_price_list.append(float(res.Data[0][-1]))
 
 	return realtime_price_list
-
