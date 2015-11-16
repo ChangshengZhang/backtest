@@ -15,7 +15,7 @@ class Send_Email():
 	"""docstring for Send_Email"""
 	def __init__(self,mail_sub,mail_content):
 		self.mail_content = mail_content
-		self.mailto_list=["changsheng.zhang@nedugroup.com"] 
+		self.mailto_list=["changsheng.zhang@nedugroup.com","zhangcsxx@163.com"] 
 		self.mail_host="smtp.nedugroup.com"  #设置服务器
 		self.mail_user="changsheng.zhang@nedugroup.com"	#用户名
 		self.mail_pass="Leed1234"   #口令 
@@ -25,7 +25,7 @@ class Send_Email():
 
 	def send_text_mail(self,to_list,sub,content):  
 		me="Changsheng Zhang"+"<"+self.mail_user+"@"+self.mail_postfix+">"  
-		msg = MIMEText(content,_subtype='plain',_charset='utf-8')  
+		msg = MIMEText(content,_subtype='html',_charset='utf-8')  
 		msg['Subject'] = sub
 		msg['From'] = me 
 		msg['To'] = ";".join(to_list)  

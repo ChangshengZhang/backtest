@@ -6,5 +6,11 @@
 
 #########################################################################
 
+import matplotlib as plt
+
+def plot_x(x,color="b",style="+"):
+	plt.plot(x,color)
+	plt.show()
+
 
 
