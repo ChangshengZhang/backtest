@@ -1,0 +1,12 @@
+000016.SH regression_day: 2 484 1178
+000016.SH regression_day: 5 214 1178
+000016.SH regression_day: 7 173 1178
+000016.SH regression_day: 10 141 1178
+000300.SH regression_day: 2 446 1178
+000300.SH regression_day: 5 220 1178
+000300.SH regression_day: 7 167 1178
+000300.SH regression_day: 10 135 1178
+399006.SZ regression_day: 2 455 1178
+399006.SZ regression_day: 5 235 1178
+399006.SZ regression_day: 7 181 1178
+399006.SZ regression_day: 10 133 1178
