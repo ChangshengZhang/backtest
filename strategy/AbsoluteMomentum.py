@@ -11,11 +11,13 @@ def AbsoluteMomentum(stock_data_list,compare_day=4,short_flag = True):
 
 	action_index_list = []
 	action_type_list = []
+	revenue_list = []
 
 	for ii in range(len(stock_data_list)):
 
 		action_index_list_per_stock = []
 		action_type_list_per_stock = []
+		revenue_list_per_stock = []
 		
 		# 0, empty 1,long -1 short
 		pos_flag = 0

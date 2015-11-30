@@ -17,7 +17,8 @@ class AbsoluteMomentumClass():
 		file_path = "input/user_data.xlsx"
 		self.user_stock_code_list,self.user_stock_name_list,user_stock_buy_point_list,user_stock_sell_point_list = LoadUserData.load_user_data(file_path)
 
-		self.daily_stock_data_all = LoadData.get_daily_stock_data(self.user_stock_code_list)
+		self.daily_stock_data_all = LoadData.get_daily_stock_data(self.user_stock_code_list,"20150101")
+		#存放收盘价
 		self.daily_stock_data = []
 
 		for ii in range(len(self.daily_stock_data_all)):
@@ -28,6 +29,8 @@ class AbsoluteMomentumClass():
 		#print self.daily_stock_data[0][-1],self.daily_stock_data[1][-1]
 		self.reminder_info= []
 		self.run()
+
+
 
 	def run(self):
 		
