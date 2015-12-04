@@ -123,10 +123,37 @@ def get_realtime_price(stock_name_list):
 
 		res=w.wst(stock_name,"open", datetime.today()-timedelta(minutes=1), datetime.now())
 		if res.ErrorCode != 0:
-			print(str(stock_name)+'wst Error \n Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
+			print(str(stock_name)+' wst Error \n Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
 			print "wst"
 			sys.exit()
 
 		realtime_price_list.append(float(res.Data[0][-1]))
 
 	return realtime_price_list
+
+#得到实时的量价
+def get_realtime_price_and_volume(stock_name_list):
+	realtime_price_list = []
+	realtime_volume_list = []
+	if w.isconnected() == False:
+		w.start()
+
+	delta_minutes = 1
+	lambda_volume = 240/((float(datetime.today().hour) - 13)*60+float(datetime.today().minute)+120)*1.05
+	if float(datetime.today().hour) >=15:
+		delta_minutes = (float(datetime.today().hour)-15+1)*60
+		lambda_volume = 1
+
+	for stock_name in stock_name_list:
+
+		res=w.wst(stock_name,"open,volume", datetime.today()-timedelta(minutes=delta_minutes), datetime.now())
+		if res.ErrorCode != 0:
+			print(str(stock_name)+' wst Error \n Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
+			print "wst"
+			sys.exit()
+
+		realtime_price_list.append(float(res.Data[0][-1]))
+		realtime_volume_list.append(float(res.Data[1][-1])*lambda_volume)
+
+	return realtime_price_list,realtime_volume_list
+

@@ -19,7 +19,7 @@ from openpyxl import load_workbook
 class HighLowPointClass():
 	"""docstring for HighLowPointClass"""
 	def __init__(self):
-		file_path = "input/user_data.xlsx"
+		file_path = "input/HighLowPoint/user_data.xlsx"
 
 		stock_code_list,stock_name_list,stock_buy_price_list,stock_sell_price_list = LoadUserData.load_user_data(file_path)
 		stock_daily_data_list = LoadData.get_daily_stock_data(stock_code_list)
@@ -192,7 +192,7 @@ class HighLowPointClass():
 	# 	return msg_fall_end,msg_rise_end 
 
 	def write_data_to_file(self,column_num,jj,high_point,high_point_time,low_point,low_point_time):
-		file_name = "input/user_data.xlsx"
+		file_name = "input/HighLowPoint/user_data.xlsx"
 		wb = load_workbook(file_name)
 		sheet_names = wb.get_sheet_names()
 		ws = wb.get_sheet_by_name(sheet_names[0])

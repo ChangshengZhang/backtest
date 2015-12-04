@@ -10,12 +10,18 @@ import strategy.PriceVolume as PriceVolume
 import data.LoadData as LoadData
 import output.PlotChart as PlotChart
 import matplotlib.pyplot as plt
+import output.SendEmail as SendEmail
+from openpyxl import load_workbook
 
 class PriceVolumeClass():
 	"""docstring for PriceVolumeClass"""
 	def __init__(self):
-		bench_mark_list = ["000016.SH","000001.SH","000300.SH","399006.SZ","399905.SZ"]
-		self.bench_mark_name_list = [u"上证50",u"上证综指",u"沪深300",u"创业板指",u"中证500"]
+		input_file_path = "input/PriceVolume/bench_mark.xlsx"
+
+		bench_mark_list,self.bench_mark_name_list = self.load_bench_mark_data(input_file_path)
+
+		#bench_mark_list = ["000016.SH","000001.SH","000300.SH","399006.SZ","399905.SZ"]
+		#self.bench_mark_name_list = [u"上证50",u"上证综指",u"沪深300",u"创业板指",u"中证500"]
 		#bench_mark_list = ["0806.HK","QIHU.N"]
 		#self.bench_mark_name_list = [u"惠理",u"奇虎"]
 		stock_data_list = LoadData.get_daily_stock_data(bench_mark_list,"20110101")
@@ -24,7 +30,7 @@ class PriceVolumeClass():
 
 		self.trade_cost = 1-0.001
 		self.range_day = 1
-		self.regression_day = [2,5,7,10]
+		self.regression_day = [2,5]
 		
 		# short flag = 1 表示可以做空
 		short_flag = 1
@@ -33,14 +39,31 @@ class PriceVolumeClass():
 		self.volume_list = []
 
 		for ii in range(len(bench_mark_list)):
-			self.price_list.append(zip(*stock_data_list[ii])[self.price_index])
-			self.volume_list.append(zip(*stock_data_list[ii])[self.volume_index])
+			self.price_list.append(list(zip(*stock_data_list[ii])[self.price_index]))
+			self.volume_list.append(list(zip(*stock_data_list[ii])[self.volume_index]))
 
-		
-		self.plot(self.price_list,bench_mark_list,self.range_day,short_flag)
+		#self.plot(self.price_list,bench_mark_list,self.range_day,short_flag)
+
+		self.run(bench_mark_list)
 
 		print "done\n"
 		
+	def load_bench_mark_data(self,input_file_path):
+		wb = load_workbook(input_file_path)
+		sheet_names = wb.get_sheet_names()
+		ws = wb.get_sheet_by_name(sheet_names[0])
+		bench_mark_list = []
+		bench_mark_name_list = []
+		row_num = len(ws.rows)
+		for ii in range(2,row_num):
+			temp_bench_mark = str(ws.cell(row=ii+1,column = 1).value)
+			temp_bench_mark_name = ws.cell(row= ii+1,column =2).value
+			bench_mark_list.append(temp_bench_mark)
+			bench_mark_name_list.append(temp_bench_mark_name)
+
+		return bench_mark_list,bench_mark_name_list
+
+
 
 	def identity(self,price_list,revenue_list):
 
@@ -154,6 +177,87 @@ class PriceVolumeClass():
 			action_index_list.append(temp_action_index_list)
 			action_type_list.append(temp_action_type_list)
 		return action_index_list,action_type_list,revenue_list
+
+
+	def run(self,bench_mark_list,short_flag = 1,range_day =1):
+		realtime_price_list,realtime_volume_list = LoadData.get_realtime_price_and_volume(bench_mark_list)
+
+		reminder_info_flag_list = []
+		is_send_email = False
+
+
+		for ii in range(len(bench_mark_list)):
+
+			self.price_list[ii].pop()
+			self.volume_list[ii].pop()
+
+		old_action_len = []
+
+		for regression_day in self.regression_day:
+
+			old_action_len_per_rangeday = []
+			self.offset = range_day +regression_day -2
+			self.slope_price_list = PriceVolume.PriceVolume(self.price_list,range_day,regression_day)
+			self.slope_volume_list = PriceVolume.PriceVolume(self.volume_list,range_day,regression_day)
+			action_index_list,action_type_list,revenue_list = self.backtest(self.offset,short_flag)
+
+			for ii in range(len(action_type_list)):
+				old_action_len_per_rangeday.append(len(action_index_list[ii]))
+			old_action_len.append(old_action_len_per_rangeday)
+
+		for ii in range(len(bench_mark_list)):
+			self.price_list[ii].append(realtime_price_list[ii])
+			self.volume_list[ii].append(realtime_volume_list[ii])
+
+		for ii in range(len(self.regression_day)):
+
+			temp_reminder_info_flag = []
+			regression_day = self.regression_day[ii]
+			
+
+			self.offset = range_day +regression_day -2
+			self.slope_price_list = PriceVolume.PriceVolume(self.price_list,range_day,regression_day)
+			self.slope_volume_list = PriceVolume.PriceVolume(self.volume_list,range_day,regression_day)
+			action_index_list,action_type_list,revenue_list = self.backtest(self.offset,short_flag)
+
+			for jj in range(len(action_index_list)):
+				if len(action_index_list[jj]) - old_action_len[ii][jj] ==1:
+					temp_reminder_info_flag.append(action_type_list[jj][-1])
+					is_send_email = True
+				else:
+					temp_reminder_info_flag.append("x")
+
+			reminder_info_flag_list.append(temp_reminder_info_flag)
+
+		#print reminder_info_flag_list
+
+		if is_send_email == True:
+			msg= '''<html> <tr>Trade  reminder from Price & Volume Model</tr> <table width="300" border="1" bordercolor="black" cellspacing="1">'''
+
+			for ii in range(len(reminder_info_flag_list)):
+				if ii ==0:
+					msg = msg + '''<tr><td> ''' + '''   </td>'''
+					for jj in range(len(reminder_info_flag_list[ii])):
+						msg = msg + ''' <td>  ''' + str(bench_mark_list[jj])+ "</td>"
+					msg = msg +  '''  </tr>\n'''
+				msg = msg + '''<tr><td>''' + str(self.regression_day[ii]) + ''' day </td>'''
+				for jj in range(len(reminder_info_flag_list[ii])):
+					if reminder_info_flag_list[ii][jj] =="b":
+						msg = msg + '''<td> long </td>'''
+					elif reminder_info_flag_list[ii][jj] =="s":
+						if short_flag ==1:
+							msg = msg + '''<td> short </td> '''
+						else:
+							msg = msg + '''<td> close previous long postion </td>'''
+					else:
+						msg = msg + '''<td> </td> '''
+
+				msg = msg + '''</tr> \n'''
+			msg = msg + '''</table></html> '''
+
+			send_email = SendEmail.Send_Email("Trade  reminder from Price & Volume Model",msg)
+			print send_email.isSend
+
 
 
 if __name__ == '__main__':
