@@ -12,6 +12,7 @@ import output.PlotChart as PlotChart
 import matplotlib.pyplot as plt
 import output.SendEmail as SendEmail
 from openpyxl import load_workbook
+from datetime import *
 
 class PriceVolumeClass():
 	"""docstring for PriceVolumeClass"""
@@ -181,6 +182,9 @@ class PriceVolumeClass():
 
 	def run(self,bench_mark_list,short_flag = 1,range_day =1):
 		realtime_price_list,realtime_volume_list = LoadData.get_realtime_price_and_volume(bench_mark_list)
+		print bench_mark_list
+		print realtime_price_list
+		print realtime_volume_list
 
 		reminder_info_flag_list = []
 		is_send_email = False
@@ -188,10 +192,13 @@ class PriceVolumeClass():
 
 		for ii in range(len(bench_mark_list)):
 
-			self.price_list[ii].pop()
-			self.volume_list[ii].pop()
+			if float(datetime.today().hour) >=15:
+				self.price_list[ii].pop()
+				self.volume_list[ii].pop()
+			print "volume",self.volume_list[ii][-1]
 
 		old_action_len = []
+
 
 		for regression_day in self.regression_day:
 
@@ -208,6 +215,7 @@ class PriceVolumeClass():
 		for ii in range(len(bench_mark_list)):
 			self.price_list[ii].append(realtime_price_list[ii])
 			self.volume_list[ii].append(realtime_volume_list[ii])
+			print "volume new",self.volume_list[ii][-1]
 
 		for ii in range(len(self.regression_day)):
 
@@ -221,6 +229,7 @@ class PriceVolumeClass():
 			action_index_list,action_type_list,revenue_list = self.backtest(self.offset,short_flag)
 
 			for jj in range(len(action_index_list)):
+				print len(action_index_list[jj]),old_action_len[ii][jj]
 				if len(action_index_list[jj]) - old_action_len[ii][jj] ==1:
 					temp_reminder_info_flag.append(action_type_list[jj][-1])
 					is_send_email = True
@@ -229,7 +238,7 @@ class PriceVolumeClass():
 
 			reminder_info_flag_list.append(temp_reminder_info_flag)
 
-		#print reminder_info_flag_list
+		print reminder_info_flag_list
 
 		if is_send_email == True:
 			msg= '''<html> <tr>Trade  reminder from Price & Volume Model</tr> <table width="300" border="1" bordercolor="black" cellspacing="1">'''

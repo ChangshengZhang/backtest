@@ -1,0 +1,2 @@
+python HighLowPointClass.py
+pause

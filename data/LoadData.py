@@ -113,15 +113,15 @@ def get_intraday_stock_data(stock_name_list,bar_size = 60,delta_days = 365*3):
 
 	return intraday_stock_data
 
-
+#获取实时价格
 def get_realtime_price(stock_name_list):
 	realtime_price_list = []
 	if w.isconnected() == False:
 		w.start()
 
 	for stock_name in stock_name_list:
-
-		res=w.wst(stock_name,"open", datetime.today()-timedelta(minutes=1), datetime.now())
+		res = w.wsq(stock_name,"rt_last")
+		#res=w.wst(stock_name,"open", datetime.today()-timedelta(minutes=1), datetime.now())
 		if res.ErrorCode != 0:
 			print(str(stock_name)+' wst Error \n Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
 			print "wst"
@@ -139,20 +139,22 @@ def get_realtime_price_and_volume(stock_name_list):
 		w.start()
 
 	delta_minutes = 1
-	lambda_volume = 240/((float(datetime.today().hour) - 13)*60+float(datetime.today().minute)+120)*1.05
+	lambda_volume = 1+(240.0/((float(datetime.today().hour) - 13)*60+float(datetime.today().minute)+120)-1)*1.05
 	if float(datetime.today().hour) >=15:
 		delta_minutes = (float(datetime.today().hour)-15+1)*60
 		lambda_volume = 1
 
 	for stock_name in stock_name_list:
 
+		res_0 = w.wsq(stock_name,"rt_last")
 		res=w.wst(stock_name,"open,volume", datetime.today()-timedelta(minutes=delta_minutes), datetime.now())
+		
 		if res.ErrorCode != 0:
 			print(str(stock_name)+' wst Error \n Error['+str(res.ErrorCode)+'][load stockcode list fail]\n')
 			print "wst"
 			sys.exit()
 
-		realtime_price_list.append(float(res.Data[0][-1]))
+		realtime_price_list.append(float(res_0.Data[0][-1]))
 		realtime_volume_list.append(float(res.Data[1][-1])*lambda_volume)
 
 	return realtime_price_list,realtime_volume_list

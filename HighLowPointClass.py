@@ -26,10 +26,6 @@ class HighLowPointClass():
 		self.fall_end_flag = []
 		self.rise_end_flag = []
 
-		for ii in range(len(stock_code_list)):
-			self.fall_end_flag.append(0)
-			self.rise_end_flag.append(0)
-
 		print "begin running\n"
 		self.run(stock_code_list,stock_buy_price_list,stock_sell_price_list)
 
@@ -38,34 +34,14 @@ class HighLowPointClass():
 
 		for ii in range(60):
 			print "the " + str(ii) + " th is begining"
+			self.current_price = LoadData.get_realtime_price(stock_code_list)
+			print self.current_price
+
 			self.get_high_low_points(stock_code_list)
+			
 			#self.stock_price_reminder(stock_code_list,stock_buy_price_list,stock_sell_price_list)
 			print "the "+ str(ii) + " th is done."
 			time.sleep(300)
-
-
-	def stock_price_reminder(self,stock_code_list,stock_buy_price_list,stock_sell_price_list):
-		
-		realtime_price_list = LoadData.get_realtime_price(stock_code_list)
-		reminder_info = []
-
-		for ii in range(len(stock_code_list)):
-
-			if float(realtime_price_list[ii]) >=float(stock_sell_price_list[ii]):
-				#sell
-				temp_reminder_info = str(stock_code_list[ii])+" should be sold, whose target sell price is "+str(stock_sell_price_list[ii])+", now price is "+str(realtime_price_list[ii])
-				reminder_info.append(temp_reminder_info)
-			elif float(realtime_price_list[ii])<=float(stock_buy_price_list[ii]):
-				
-				temp_reminder_info = str(stock_code_list[ii])+" should be bought, whose target buy price is "+str(stock_buy_price_list[ii])+ ", now price is "+str(realtime_price_list[ii])
-				reminder_info.append(temp_reminder_info)
-
-		if len(reminder_info)!= 0:
-			mail_content = ""
-			for jj in range(len(reminder_info)):
-				mail_content = mail_content + "\n" + reminder_info[jj]+"\n"
-			print mail_content 
-			b = SendEmail.Send_Email("Stock price reminder from H&L Model",mail_content)
 
 
 	def get_high_low_points(self,stock_code_list):
@@ -92,12 +68,12 @@ class HighLowPointClass():
 
 				self.write_data_to_file(column_num[ii],jj,high_point_list[jj][-1],high_point_time_list[jj][-1],low_point_list[jj][-1],low_point_time_list[jj][-1])
 				
-				temp_msg_fall_end, temp_msg_rise_end = self.judge_trend_inverse(high_point_list[jj],low_point_list[jj],jj) 
+				temp_msg_fall_end, temp_msg_rise_end = self.judge_trend_inverse(high_point_list[jj],low_point_list[jj],self.current_price[jj]) 
 
-				if temp_msg_fall_end =="True":
+				if temp_msg_fall_end ==True:
 					fall_end_list.append(stock_code_list[jj])
 					send_email_flag = True
-				if temp_msg_rise_end == "True":
+				if temp_msg_rise_end == True:
 					rise_end_lsit.append(stock_code_list[jj])
 					send_email_flag = True
 			for item in fall_end_list:
@@ -111,8 +87,6 @@ class HighLowPointClass():
 		if send_email_flag == True:
 			a = SendEmail.Send_Email("Trend inverse reminder from H&L Model",msg)
 			print a.isSend
-		print self.fall_end_flag
-		print self.rise_end_flag
 
 
 	def judge_trend_inverse(self,high_point_list,low_point_list,current_price):
@@ -128,32 +102,60 @@ class HighLowPointClass():
 		down_flag = False
 		up_flag = False
 
-		for ii in range(number):
-			long_flag = 0 
-			short_flag = 0
-			
-			if float(high_point_list[ii+high_list_len-number])<float(ii+high_list_len-number):
-				pre_high_flag = pre_high_flag +1
 
-			else:
-				if pre_high_flag >=1 and(len(action_type_list)==0 or action_type_list[-1]!="l"):
-					long_flag =1
-				pre_high_flag = 0 
-			if float(low_point_list[ii+low_list_len-number])>float(ii+low_list_len-number):
-				pre_low_flag = pre_low_flag +1
-			else:
-				if pre_low_flag >=1 and(len(action_type_list)==0 or action_type_list[-1]!="s"):
-					short_flag =1 
-				pre_low_flag = 0
+		if high_list_len == low_list_len:
+			for ii in range(number):
+				long_flag = 0 
+				short_flag = 0
+				
+				if float(high_point_list[ii+high_list_len-number])<float(ii+high_list_len-number):
+					pre_high_flag = pre_high_flag +1
+				else:
+					if pre_high_flag >=1 and(len(action_type_list)==0 or action_type_list[-1]!="l"):
+						long_flag =1
+					pre_high_flag = 0 
+				if float(low_point_list[ii+low_list_len-number])>float(ii+low_list_len-number):
+					pre_low_flag = pre_low_flag +1
+				else:
+					if pre_low_flag >=1 and(len(action_type_list)==0 or action_type_list[-1]!="s"):
+						short_flag =1 
+					pre_low_flag = 0
 
-			if pos_status !=1 and long_flag ==1:
-				action_type_list.append("l")
-				action_index_list.append(ii)
-				pos_status = 1
-			if pos_status !=-1 and short_flag ==1:
-				action_type_list.append("s")
-				action_index_list.append(ii)
-				pos_status = -1
+				if pos_status !=1 and long_flag ==1:
+					action_type_list.append("l")
+					action_index_list.append(ii)
+					pos_status = 1
+				if pos_status !=-1 and short_flag ==1:
+					action_type_list.append("s")
+					action_index_list.append(ii)
+					pos_status = -1
+		else:
+			for ii in range(number):
+				long_flag = 0 
+				short_flag = 0
+				if float(low_point_list[ii+low_list_len-number])>float(ii+low_list_len-number):
+					pre_low_flag = pre_low_flag +1
+				else:
+					if pre_low_flag >=1 and(len(action_type_list)==0 or action_type_list[-1]!="s"):
+						short_flag =1 
+					pre_low_flag = 0
+
+				if float(high_point_list[ii+high_list_len-number])<float(ii+high_list_len-number):
+					pre_high_flag = pre_high_flag +1
+
+				else:
+					if pre_high_flag >=1 and(len(action_type_list)==0 or action_type_list[-1]!="l"):
+						long_flag =1
+					pre_high_flag = 0 
+
+				if pos_status !=1 and long_flag ==1:
+					action_type_list.append("l")
+					action_index_list.append(ii)
+					pos_status = 1
+				if pos_status !=-1 and short_flag ==1:
+					action_type_list.append("s")
+					action_index_list.append(ii)
+					pos_status = -1
 		
 		if len(action_type_list)!=0:
 			if action_type_list[-1] == "l":
@@ -163,6 +165,7 @@ class HighLowPointClass():
 				if current_price > high_point_list[-1]:
 					up_flag = True
 
+		print "up down flag:",up_flag,down_flag
 		return up_flag,down_flag
 
 

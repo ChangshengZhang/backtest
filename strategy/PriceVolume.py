@@ -16,7 +16,7 @@ def calc_ma(per_stock_data_list,jj,range_day):
 
 
 # data_list is 2-dim list
-def PriceVolume(stock_data_list,range_day=10,regression_day = 5):
+def PriceVolume(stock_data_list,range_day=1,regression_day = 5):
 	slope_list = []
 
 	for ii in range(len(stock_data_list)):
