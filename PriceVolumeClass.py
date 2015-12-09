@@ -43,9 +43,9 @@ class PriceVolumeClass():
 			self.price_list.append(list(zip(*stock_data_list[ii])[self.price_index]))
 			self.volume_list.append(list(zip(*stock_data_list[ii])[self.volume_index]))
 
-		#self.plot(self.price_list,bench_mark_list,self.range_day,short_flag)
+		self.plot(self.price_list,bench_mark_list,self.range_day,short_flag)
 
-		self.run(bench_mark_list)
+		#self.run(bench_mark_list)
 
 		print "done\n"
 		
@@ -66,55 +66,59 @@ class PriceVolumeClass():
 
 
 
-	def identity(self,price_list,revenue_list):
+	def identity(self,price_list,revenue_list,action_index_list):
 
 		new_revenue_list =[]
+		new_action_index = []
 		for ii in range(len(price_list)-len(revenue_list)):
 			new_revenue_list.append(1.0)
 		for ii in range(len(revenue_list)):
 			new_revenue_list.append(revenue_list[ii])
-		return new_revenue_list
+		for ii in range(len(action_index_list)):
+			new_action_index.append(action_index_list[ii]+len(price_list)-len(revenue_list))
+		return new_revenue_list,new_action_index
 
 	def plot(self,price_list,bench_mark_list,range_day,short_flag=1):
 		color =["b","y","c","k"]
+			
+		cc =0
+		for ii in range(len(self.regression_day)):
+			
+			self.offset = range_day +self.regression_day[ii] -2
+			self.slope_price_list = PriceVolume.PriceVolume(self.price_list,range_day,self.regression_day[ii])
+			self.slope_volume_list = PriceVolume.PriceVolume(self.volume_list,range_day,self.regression_day[ii])
 
-		for ii in range(len(bench_mark_list)):
-			plt.figure(ii)
-			cc=0
-			for regression_day in self.regression_day:
-				self.offset = range_day +regression_day -2
-				self.slope_price_list = PriceVolume.PriceVolume(self.price_list,range_day,regression_day)
-				self.slope_volume_list = PriceVolume.PriceVolume(self.volume_list,range_day,regression_day)
-
-
-				action_index_list,action_type_list,revenue_list = self.backtest(self.offset,short_flag)
-				
-				print bench_mark_list[ii],"regression_day:",regression_day,len(action_index_list[ii]),len(self.price_list[0])
+			action_index_list,action_type_list,revenue_list = self.backtest(self.offset,short_flag)
+			for jj in range(len(bench_mark_list)):
+				plt.figure(jj)
+				print bench_mark_list[jj],"regression_day:",self.regression_day[ii],len(action_index_list[jj]),len(self.price_list[jj])
+				new_revenue, new_action_index = self.identity(self.price_list[jj],revenue_list[jj],action_index_list[jj])
 
 				temp_long_action_index = []
 				temp_short_action_index = []
-				for jj in range(len(action_index_list[ii])):
-					if action_type_list[ii][jj] == "b":
-						temp_long_action_index.append([action_index_list[ii][jj],price_list[ii][action_index_list[ii][jj]+self.offset]/price_list[ii][self.offset]])
+				for kk in range(len(new_action_index)):
+					if action_type_list[jj][kk] == "b":
+						temp_long_action_index.append([new_action_index[kk],new_revenue[new_action_index[kk]]])
 					else:
-						temp_short_action_index.append([action_index_list[ii][jj],price_list[ii][action_index_list[ii][jj]+self.offset]/price_list[ii][self.offset]])
+						temp_short_action_index.append([new_action_index[kk],new_revenue[new_action_index[kk]]])
 				volume_index = []
 				volume_num = []
-				max_volumn = 2.0*max(self.volume_list[ii])
-				for kk in range(len(self.volume_list[ii])):
+				max_volumn = 2.0*max(self.volume_list[jj])
+				for kk in range(len(self.volume_list[jj])):
 					volume_index.append(kk)
-					volume_num.append(self.volume_list[ii][kk]/max_volumn)
-				
-				plt.plot(self.identity(price_list[ii],revenue_list[ii]),color = color[cc%len(color)],linewidth = 2.5,label = str(regression_day)+u"天回归的策略收益")
-				
-				#plt.scatter(list(zip(*temp_long_action_index)[0]),list(zip(*temp_long_action_index)[1]),c="r",s=30,marker="s")
-				#plt.scatter(list(zip(*temp_short_action_index)[0]),list(zip(*temp_short_action_index)[1]),c="g",s=30,marker="v")
-				
-				cc = cc +1
+					volume_num.append(self.volume_list[jj][kk]/max_volumn)
 
+				plt.plot(new_revenue,color = color[cc%len(color)],linewidth = 2.5,label = str(self.regression_day[ii])+u"天回归的策略收益")
+				
+				plt.scatter(list(zip(*temp_long_action_index)[0]),list(zip(*temp_long_action_index)[1]),c="r",s=70,marker="s")
+				plt.scatter(list(zip(*temp_short_action_index)[0]),list(zip(*temp_short_action_index)[1]),c="g",s=70,marker="v")
+			cc = cc +1
+
+		for ii in range(len(bench_mark_list)):
+			plt.figure(ii)
 			plt.plot(self.norm_list(price_list[ii]),color = "r",label =u"价格走势")
 			plt.bar(volume_index,volume_num,color ="k",label= u"成交量")
-			plt.legend(loc="upper left")
+			plt.legend(loc="upper right")
 			plt.xlim(0,len(revenue_list[0])+30)
 			plt.ylim(0)
 			if short_flag ==1:
@@ -122,9 +126,13 @@ class PriceVolumeClass():
 			else:
 				plt.title("long/hold "+self.bench_mark_name_list[ii])
 			plt.xlabel("Time /day")
-			plt.ylabel("Stock Revenue")
+			plt.ylabel("Return")
 			plt.grid(True)
-		plt.show()
+			fig = plt.gcf()
+			fig.set_size_inches(24, 15)
+			fig.savefig("png/PriceVolume/"+bench_mark_list[ii]+".png",dpi = 200)
+
+		#plt.show()
 
 	def norm_list(self,list_a):
 		new_list =[]
@@ -136,7 +144,6 @@ class PriceVolumeClass():
 		action_index_list = []
 		action_type_list =[] 
 		revenue_list = []
-		
 
 		for ii in range(len(self.slope_price_list)):
 			pos_flag = 0
@@ -161,11 +168,14 @@ class PriceVolumeClass():
 
 				else:
 					if pos_flag ==1:
-						temp_revenue_list.append(temp_revenue_list[-1]*float(self.price_list[ii][jj+offset])/float(self.price_list[ii][jj+offset-1])*self.trade_cost)
 
-						temp_action_index_list.append(jj)
-						temp_action_type_list.append("s")
-						pos_flag = 0
+						if self.slope_price_list[ii][jj]==-1 and self.slope_volume_list[ii][jj] ==-1:
+							temp_revenue_list.append(temp_revenue_list[-1]*float(self.price_list[ii][jj+offset])/float(self.price_list[ii][jj+offset-1])*self.trade_cost)
+							temp_action_index_list.append(jj)
+							temp_action_type_list.append("s")
+							pos_flag = 0
+						else:
+							temp_revenue_list.append(temp_revenue_list[-1]*float(self.price_list[ii][jj+offset])/float(self.price_list[ii][jj+offset-1]))
 					else:
 						if len(temp_action_index_list)==0:
 							temp_revenue_list.append(1.0)
@@ -173,7 +183,8 @@ class PriceVolumeClass():
 							if short_flag ==0:
 								temp_revenue_list.append(temp_revenue_list[-1])
 							else:
-								temp_revenue_list.append(temp_revenue_list[-1]*(2-float(self.price_list[ii][jj+offset]/float(self.price_list[ii][jj+offset-1])))*self.trade_cost)
+								temp_revenue_list.append(temp_revenue_list[-1]*(2-float(self.price_list[ii][jj+offset]/float(self.price_list[ii][jj+offset-1]))))
+
 			revenue_list.append(temp_revenue_list)
 			action_index_list.append(temp_action_index_list)
 			action_type_list.append(temp_action_type_list)
