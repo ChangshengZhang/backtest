@@ -39,10 +39,9 @@ class DeviationFromMA():
 
 		self.diviation_from_ma_list,self.diviation_from_ma_std_list = self.calc_diviation_from_ma(ma_days)
 
-		self.diviation_ma_list = []
-		self.ma_days_list =[5,10,20,60,120,200,250]
-		for item in self.ma_days_list:
-			self.diviation_ma_list.append(CalcIndex.Calc_MA(self.diviation_from_ma_list,item))
+		self.ma_dict ={60:10,120:20,200:60,250:60}
+		
+		self.diviation_ma_list = CalcIndex.Calc_MA(self.diviation_from_ma_list,self.ma_dict[self.ma_days])
 
 		#self.plot(ma_days)
 		#self.eveluate_index(ma_days)
@@ -69,8 +68,8 @@ class DeviationFromMA():
 			
 			plt.plot(self.user_stock_uniform_price_list[ii],color = "k",linewidth = 2.5,label = "Price")
 			#plt.plot(self.back_test_info[5][ii],color = "b",linewidth =2.5,label = "Return")
-			plt.scatter(self.back_test_info[1][ii],self.back_test_info[2][ii],c="r",s=100,marker ="s",label ="Long")
-			plt.scatter(self.back_test_info[3][ii],self.back_test_info[4][ii],c="g",s=100,marker ="v",label = "Short/Sell")
+			plt.scatter(self.back_test_info[1][ii],self.back_test_info[2][ii],c="r",s=150,marker ="s",label ="Long")
+			plt.scatter(self.back_test_info[3][ii],self.back_test_info[4][ii],c="g",s=150,marker ="s",label = "Short/Sell")
 			plt.xlabel("Time /day")
 			plt.ylabel("Return")
 			plt.legend(loc="upper left")
@@ -81,7 +80,7 @@ class DeviationFromMA():
 			#ax_2.plot(negetive_std,color = "g",linewidth = 2.5,label = "Negative Std")
 
 			#for jj in range(len(self.ma_days_list)):
-			ax_2.plot(self.diviation_ma_list[1][ii],color ="c",linewidth = 2.5, label ="10 MA of Diviation")
+			ax_2.plot(self.diviation_ma_list[ii],color ="c",linewidth = 2.5, label =str(self.ma_dict[self.ma_days])+" MA of Diviation")
 
 			ax_2.legend(loc = "upper right")
 			ax_2.set_ylabel("Diviation From MA")
@@ -114,17 +113,17 @@ class DeviationFromMA():
 		buy_signal_2 = False
 		buy_signal_3 = False
 		coeff = {60:14,120:7,200:6,250:5}
-		coeff_1 = {60:2.5,120:2.8,200:3.2,250:3.5}
-
-		if self.diviation_from_ma_list[ii][jj]<1.1*np.percentile(self.diviation_from_ma_list[ii][max(jj-coeff[self.ma_days]*self.ma_days+1,0):jj+1],2)and self.diviation_from_ma_list[ii][jj] >min(self.diviation_from_ma_list[ii][max(jj-coeff[self.ma_days]*self.ma_days+1,0):jj+1])and(max(self.diviation_from_ma_list[ii][max(0,jj-3):jj])<self.diviation_from_ma_list[ii][jj]) :
+		coeff_1 = {60:1.5,120:2.0,200:2.5,250:2.5}
+		coeff_2 = {60:8,120:4,200:2,250:1}
+		if self.diviation_ma_list[ii][jj]>self.diviation_ma_list[ii][max(jj-1,0)] and self.diviation_ma_list[ii][jj]<1.0*np.percentile(self.diviation_ma_list[ii][max(jj-coeff[self.ma_days]*self.ma_days+1,0):jj+1],2)and self.diviation_ma_list[ii][jj] >min(self.diviation_ma_list[ii][max(jj-coeff[self.ma_days]*self.ma_days+1,0):jj+1])and(max(self.diviation_ma_list[ii][max(0,jj-2):jj])<self.diviation_ma_list[ii][jj]) :
 			buy_signal_1 = True
 		# if jj >0 and self.diviation_from_ma_list[ii][jj] <stand_deviation and self.diviation_from_ma_list[ii][jj-1]> stand_deviation:
 		# 	buy_signal_1 = True
 
-		if self.diviation_from_ma_list[ii][jj] < -1.0*coeff_1[self.ma_days]*self.diviation_from_ma_std_list[ii][jj] and self.diviation_from_ma_list[ii][jj]<stand_deviation :
+		if self.diviation_ma_list[ii][jj] < -1.1*coeff_1[self.ma_days]*self.diviation_from_ma_std_list[ii][jj] and self.diviation_ma_list[ii][jj]<stand_deviation :
 			buy_signal_2 = True
 
-		if jj >0 and self.diviation_from_ma_list[ii][jj-1] == min(self.diviation_from_ma_list[ii][0:jj]) and self.diviation_from_ma_list[ii][jj]>self.diviation_from_ma_list[ii][jj-1]:
+		if jj >0 and self.diviation_ma_list[ii][jj-1] == min(self.diviation_ma_list[ii][max(jj-coeff_2[self.ma_days]*self.ma_days+1,0):jj]) and self.diviation_ma_list[ii][jj]>self.diviation_ma_list[ii][jj-1]:
 			buy_signal_3 = True
 
 		if buy_signal_1 or buy_signal_2 or buy_signal_3:
@@ -134,21 +133,22 @@ class DeviationFromMA():
 
 	def sell_signal(self,ii,jj,stand_deviation):
 		flag = False
-		coeff = {60:8,120:4,200:3,250:2}
-		coeff_1 = {60:2.8,120:3.0,200:3.2,250:3.5}
+		coeff = {60:14,120:7,200:6,250:5}
+		coeff_1 = {60:1.5,120:2,200:2.7,250:2.7}
+		coeff_2 = {60:8,120:4,200:2,250:1}
 		sell_signal_1 = False
 		sell_signal_2 = False
 		sell_signal_3 = False
-		if self.diviation_from_ma_list[ii][jj]> 1.2*np.percentile(self.diviation_from_ma_list[ii][max(jj-coeff[self.ma_days]*self.ma_days+1,0):jj+1],98) and self.diviation_from_ma_list[ii][jj] <max(self.diviation_from_ma_list[ii][max(jj-coeff[self.ma_days]*self.ma_days+1,0):jj+1]) and (min(self.diviation_from_ma_list[ii][max(0,jj-3):jj])>self.diviation_from_ma_list[ii][jj]):
+		if self.diviation_ma_list[ii][jj] <self.diviation_ma_list[ii][max(jj-1,0)] and self.diviation_ma_list[ii][jj]> 1.5*np.percentile(self.diviation_ma_list[ii][max(jj-coeff[self.ma_days]*self.ma_days+1,0):jj+1],98) and self.diviation_ma_list[ii][jj] <max(self.diviation_ma_list[ii][max(jj-coeff[self.ma_days]*self.ma_days+1,0):jj+1]) and (min(self.diviation_ma_list[ii][max(0,jj-2):jj])>self.diviation_ma_list[ii][jj]):
 			sell_signal_1 = True
 
 		#if self.diviation_from_ma_list[ii][jj] >= max(self.diviation_from_ma_list[ii][max(jj-coeff[self.ma_days]*self.ma_days+1,0):jj+1]) and self.diviation_from_ma_list[ii][jj] >= 1.1*max(self.diviation_from_ma_list[ii][max(jj-coeff[self.ma_days]*self.ma_days+1,0):jj]) :
 			#sell_signal_2 = True
 
-		if self.diviation_from_ma_list[ii][jj] >1.0*coeff_1[self.ma_days]*self.diviation_from_ma_std_list[ii][jj] and self.diviation_from_ma_list[ii][jj] > stand_deviation:
+		if self.diviation_ma_list[ii][jj] >1.3*coeff_1[self.ma_days]*self.diviation_from_ma_std_list[ii][jj] and self.diviation_ma_list[ii][jj] > stand_deviation:
 			sell_signal_2 = True
 
-		if jj >0 and self.diviation_from_ma_list[ii][jj-1] == max(self.diviation_from_ma_list[ii][0:jj]) and self.diviation_from_ma_list[ii][jj] < self.diviation_from_ma_list[ii][jj-1]:
+		if jj >0 and self.diviation_ma_list[ii][jj-1] == max(self.diviation_ma_list[ii][max(jj-coeff_2[self.ma_days]*self.ma_days+1,0):jj]) and self.diviation_ma_list[ii][jj] < self.diviation_ma_list[ii][jj-1]:
 			sell_signal_3 = True
 
 		if sell_signal_1 or sell_signal_2 or sell_signal_3:
